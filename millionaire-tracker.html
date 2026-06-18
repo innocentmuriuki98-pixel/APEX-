@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>APEX — Millionaire System</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00FFFF;
+    --magenta: #FF00FF;
+    --green: #00FF88;
+    --orange: #FF6600;
+    --blue: #0066FF;
+    --gold: #FFD700;
+    --red: #FF2244;
+    --bg: #020208;
+    --bg2: #050510;
+    --bg3: #080818;
+    --panel: rgba(0,255,255,0.04);
+    --border: rgba(0,255,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: #e0e0ff;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ANIMATED GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,100,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(255,0,255,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* LOGIN SCREEN */
+  #loginScreen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    background: var(--bg);
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .login-box {
+    width: 90%;
+    max-width: 400px;
+    border: 1px solid var(--cyan);
+    background: rgba(0,0,20,0.95);
+    padding: 40px 30px;
+    position: relative;
+    box-shadow: 0 0 60px rgba(0,255,255,0.15), inset 0 0 60px rgba(0,0,50,0.5);
+  }
+
+  .login-box::before, .login-box::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: var(--cyan);
+    border-style: solid;
+  }
+  .login-box::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .login-box::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+  .login-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 8px;
+    color: var(--cyan);
+    text-shadow: 0 0 30px var(--cyan), 0 0 60px rgba(0,255,255,0.3);
+    margin-bottom: 8px;
+  }
+
+  .login-sub {
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    color: rgba(0,255,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .login-input {
+    width: 100%;
+    background: rgba(0,255,255,0.05);
+    border: 1px solid rgba(0,255,255,0.3);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    padding: 14px 18px;
+    outline: none;
+    letter-spacing: 4px;
+    transition: all 0.3s;
+    margin-bottom: 20px;
+  }
+
+  .login-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,255,255,0.2);
+    background: rgba(0,255,255,0.08);
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,255,255,0.1), transparent);
+    transition: left 0.5s;
+  }
+
+  .login-btn:hover::before { left: 100%; }
+  .login-btn:hover {
+    background: rgba(0,255,255,0.1);
+    box-shadow: 0 0 30px rgba(0,255,255,0.3);
+  }
+
+  .login-error {
+    color: var(--red);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 12px;
+    letter-spacing: 1px;
+    min-height: 20px;
+  }
+
+  .login-hint {
+    color: rgba(0,255,255,0.3);
+    font-size: 0.75rem;
+    text-align: center;
+    margin-top: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* MAIN APP */
+  #app { display: none; position: relative; z-index: 1; }
+
+  /* TOP NAV */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(2,2,8,0.95);
+    border-bottom: 1px solid rgba(0,255,255,0.15);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+  }
+
+  .nav-date {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: rgba(0,255,255,0.5);
+    letter-spacing: 2px;
+  }
+
+  .logout-btn {
+    background: transparent;
+    border: 1px solid rgba(255,34,68,0.4);
+    color: var(--red);
+    padding: 6px 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .logout-btn:hover { background: rgba(255,34,68,0.1); box-shadow: 0 0 10px rgba(255,34,68,0.3); }
+
+  /* TAB NAV */
+  .tabnav {
+    display: flex;
+    overflow-x: auto;
+    background: rgba(0,0,10,0.8);
+    border-bottom: 1px solid rgba(0,255,255,0.1);
+    scrollbar-width: none;
+  }
+  .tabnav::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex-shrink: 0;
+    padding: 14px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: rgba(0,255,255,0.4);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan);
+    text-shadow: 0 0 10px var(--cyan);
+  }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; min-height: calc(100vh - 120px); }
+  .page.active { display: block; }
+
+  /* HERO SECTION */
+  .hero {
+    text-align: center;
+    padding: 30px 0 20px;
+    position: relative;
+  }
+
+  .hero-greeting {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(0,255,255,0.5);
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .hero-title span {
+    color: var(--gold);
+    text-shadow: 0 0 20px var(--gold);
+  }
+
+  .hero-mission {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+
+  /* SCORE RING */
+  .score-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  .score-ring {
+    position: relative;
+    width: 160px;
+    height: 160px;
+  }
+
+  .score-ring svg {
+    transform: rotate(-90deg);
+    width: 160px;
+    height: 160px;
+  }
+
+  .score-ring-bg { fill: none; stroke: rgba(0,255,255,0.1); stroke-width: 8; }
+  .score-ring-fill {
+    fill: none;
+    stroke: url(#scoreGrad);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 440;
+    stroke-dashoffset: 440;
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .score-inner {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .score-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: rgba(0,255,255,0.5);
+    margin-top: 4px;
+  }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 14px 10px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+
+  .stat-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 10px rgba(0,255,255,0.5);
+  }
+
+  .stat-lbl {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0 16px;
+  }
+
+  .section-header h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,255,255,0.3), transparent);
+  }
+
+  /* HABIT CARDS */
+  .habit-group {
+    margin-bottom: 24px;
+  }
+
+  .habit-group-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    display: inline-block;
+  }
+
+  .habit-group-title.danger { color: var(--red); border-left: 2px solid var(--red); }
+  .habit-group-title.wealth { color: var(--gold); border-left: 2px solid var(--gold); }
+  .habit-group-title.mind { color: var(--magenta); border-left: 2px solid var(--magenta); }
+  .habit-group-title.body { color: var(--green); border-left: 2px solid var(--green); }
+
+  .habit-card {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .habit-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--habit-color, var(--cyan));
+    opacity: 0.5;
+  }
+
+  .habit-card:hover { background: rgba(0,255,255,0.06); }
+  .habit-card.done { background: rgba(0,255,136,0.06); border-color: rgba(0,255,136,0.2); }
+  .habit-card.done::before { background: var(--green); opacity: 1; }
+  .habit-card.failed { background: rgba(255,34,68,0.06); border-color: rgba(255,34,68,0.2); }
+  .habit-card.failed::before { background: var(--red); opacity: 1; }
+
+  .habit-check {
+    width: 28px; height: 28px;
+    border: 2px solid rgba(0,255,255,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+  }
+
+  .habit-card.done .habit-check {
+    border-color: var(--green);
+    background: rgba(0,255,136,0.15);
+    box-shadow: 0 0 12px rgba(0,255,136,0.3);
+  }
+
+  .habit-card.failed .habit-check {
+    border-color: var(--red);
+    background: rgba(255,34,68,0.15);
+  }
+
+  .habit-info { flex: 1; }
+
+  .habit-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e0e0ff;
+    letter-spacing: 0.5px;
+  }
+
+  .habit-desc {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  .habit-xp {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    color: var(--gold);
+    text-shadow: 0 0 6px rgba(255,215,0,0.4);
+  }
+
+  /* SCHEDULE */
+  .schedule-item {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0,255,255,0.06);
+    align-items: flex-start;
+  }
+
+  .schedule-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--cyan);
+    min-width: 52px;
+    padding-top: 2px;
+    text-shadow: 0 0 8px rgba(0,255,255,0.4);
+  }
+
+  .schedule-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  .schedule-content { flex: 1; }
+  .schedule-title { font-size: 0.9rem; font-weight: 600; color: #e0e0ff; }
+  .schedule-detail { font-size: 0.72rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+  /* VICE TRACKER */
+  .vice-card {
+    background: rgba(255,34,68,0.04);
+    border: 1px solid rgba(255,34,68,0.15);
+    padding: 16px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .vice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .vice-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--red);
+  }
+
+  .vice-days {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--gold);
+  }
+
+  .vice-bar-bg {
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .vice-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--gold));
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .vice-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .vice-btn {
+    flex: 1;
+    padding: 8px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border: 1px solid;
+    background: transparent;
+    transition: all 0.3s;
+  }
+
+  .vice-btn.clean { border-color: rgba(0,255,136,0.4); color: var(--green); }
+  .vice-btn.clean:hover { background: rgba(0,255,136,0.1); }
+  .vice-btn.relapse { border-color: rgba(255,34,68,0.4); color: var(--red); }
+  .vice-btn.relapse:hover { background: rgba(255,34,68,0.1); }
+
+  /* CHARTS */
+  .chart-container {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px 16px 10px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .chart-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 100px;
+    padding-bottom: 20px;
+    position: relative;
+    border-bottom: 1px solid rgba(0,255,255,0.1);
+  }
+
+  .bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    width: 100%;
+    background: linear-gradient(180deg, var(--cyan), rgba(0,255,255,0.3));
+    border-radius: 2px 2px 0 0;
+    transition: height 1s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 8px rgba(0,255,255,0.3);
+    min-height: 3px;
+  }
+
+  .bar-day {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(0,255,255,0.4);
+    position: absolute;
+    bottom: 0;
+  }
+
+  .bar-labels {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .bar-label {
+    flex: 1;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem;
+    color: rgba(0,255,255,0.4);
+  }
+
+  /* WEALTH ROADMAP */
+  .roadmap-item {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    position: relative;
+  }
+
+  .roadmap-item::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 40px;
+    bottom: 0;
+    width: 1px;
+    background: rgba(0,255,255,0.1);
+  }
+
+  .roadmap-item:last-child::after { display: none; }
+
+  .roadmap-dot {
+    width: 30px; height: 30px;
+    border: 2px solid;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    z-index: 1;
+    background: var(--bg);
+  }
+
+  .roadmap-dot.done { border-color: var(--green); color: var(--green); }
+  .roadmap-dot.current { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 15px rgba(255,215,0,0.3); }
+  .roadmap-dot.future { border-color: rgba(0,255,255,0.2); color: rgba(0,255,255,0.3); }
+
+  .roadmap-content { flex: 1; }
+
+  .roadmap-age {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+
+  .roadmap-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e0e0ff;
+    margin: 2px 0;
+  }
+
+  .roadmap-desc {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.5;
+  }
+
+  .roadmap-target {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    color: var(--green);
+    margin-top: 4px;
+  }
+
+  /* QUOTES */
+  .quote-box {
+    background: linear-gradient(135deg, rgba(0,255,255,0.05), rgba(255,0,255,0.03));
+    border: 1px solid rgba(0,255,255,0.15);
+    border-left: 3px solid var(--cyan);
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.7);
+    font-style: italic;
+  }
+
+  .quote-author {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    margin-top: 8px;
+    font-style: normal;
+  }
+
+  /* REMINDER BANNER */
+  .reminder {
+    background: rgba(255,102,0,0.08);
+    border: 1px solid rgba(255,102,0,0.25);
+    border-left: 3px solid var(--orange);
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .reminder-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    color: var(--orange);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  /* WATER TRACKER */
+  .water-tracker {
+    background: rgba(0,100,255,0.06);
+    border: 1px solid rgba(0,100,255,0.2);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .water-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .water-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: var(--blue);
+  }
+
+  .water-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--cyan);
+  }
+
+  .water-cups {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .cup {
+    width: 32px; height: 32px;
+    border: 1px solid rgba(0,100,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    filter: grayscale(1) opacity(0.3);
+  }
+
+  .cup.filled {
+    filter: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 8px rgba(0,100,255,0.3);
+  }
+
+  .water-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid rgba(0,100,255,0.4);
+    color: var(--blue);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .water-btn:hover { background: rgba(0,100,255,0.1); }
+
+  /* XP BAR */
+  .xp-section {
+    margin: 16px 0;
+  }
+
+  .xp-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .xp-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+
+  .xp-bar-bg {
+    height: 6px;
+    background: rgba(255,215,0,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .xp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--gold));
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(255,215,0,0.4);
+    transition: width 1s ease;
+  }
+
+  /* GLITCH ANIMATION */
+  @keyframes glitch {
+    0%, 100% { text-shadow: 0 0 20px var(--cyan); }
+    25% { text-shadow: -2px 0 var(--magenta), 2px 0 var(--cyan); }
+    75% { text-shadow: 2px 0 var(--magenta), -2px 0 var(--cyan); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  .scanline {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,255,0.1), transparent);
+    pointer-events: none;
+    z-index: 999;
+    animation: scanline 8s linear infinite;
+  }
+
+  .glitch { animation: glitch 4s infinite; }
+  .pulse { animation: pulse 2s infinite; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0,10,20,0.95);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 12px 24px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    z-index: 9999;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 30px rgba(0,255,255,0.2);
+    text-align: center;
+    max-width: 280px;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.2); border-radius: 2px; }
+
+  /* STREAK FIRE */
+  .streak-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 20px;
+  }
+
+  .streak-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  }
+
+  .streak-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: rgba(255,215,0,0.5);
+    text-transform: uppercase;
+  }
+
+  /* AFFIRMATION */
+  .affirmation {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.04), rgba(0,255,255,0.02));
+    border: 1px solid rgba(255,215,0,0.1);
+    margin: 16px 0;
+  }
+
+  .affirmation-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    line-height: 1.8;
+    text-shadow: 0 0 10px rgba(255,215,0,0.2);
+  }
+
+  /* LEVEL BADGE */
+  .level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.25);
+    padding: 6px 14px;
+    margin-bottom: 16px;
+  }
+
+  .level-icon { font-size: 1.1rem; }
+
+  .level-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo glitch">APEX</div>
+    <div class="login-sub">Your Millionaire Operating System</div>
+    <input type="password" class="login-input" id="pinInput" placeholder="ENTER YOUR PIN" maxlength="6" />
+    <button class="login-btn" onclick="doLogin()">▶ INITIATE SEQUENCE</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-hint">Default PIN: 1234 — change in Settings</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <nav class="topnav">
+    <div class="nav-logo">APEX</div>
+    <div class="nav-date" id="navDate"></div>
+    <button class="logout-btn" onclick="logout()">EXIT</button>
+  </nav>
+
+  <div class="tabnav">
+    <div class="tab active" onclick="showTab('dashboard')">⚡ DASHBOARD</div>
+    <div class="tab" onclick="showTab('habits')">🎯 HABITS</div>
+    <div class="tab" onclick="showTab('vices')">⚔️ BATTLES</div>
+    <div class="tab" onclick="showTab('schedule')">🕐 SCHEDULE</div>
+    <div class="tab" onclick="showTab('wealth')">💎 WEALTH</div>
+    <div class="tab" onclick="showTab('progress')">📊 PROGRESS</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="hero">
+      <div class="hero-greeting" id="greeting">GOOD MORNING, WARRIOR</div>
+      <div class="hero-title">BUILD YOUR <span>EMPIRE</span></div>
+      <div class="hero-mission">18 years old. Unlimited potential. Kenya's next millionaire.</div>
+    </div>
+
+    <div class="score-container">
+      <div class="score-ring">
+        <svg viewBox="0 0 160 160">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#00FFFF"/>
+              <stop offset="100%" style="stop-color:#FF00FF"/>
+            </linearGradient>
+          </defs>
+          <circle class="score-ring-bg" cx="80" cy="80" r="70"/>
+          <circle class="score-ring-fill" id="scoreRing" cx="80" cy="80" r="70"/>
+        </svg>
+        <div class="score-inner">
+          <div class="score-num" id="scoreNum">0</div>
+          <div class="score-label">TODAY'S SCORE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="streak-display">
+      <div>
+        <div class="streak-num" id="streakNum">🔥 0</div>
+        <div class="streak-label">Day Streak</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="statDone">0</div>
+        <div class="stat-lbl">Done</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statTotal">0</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statXP">0</div>
+        <div class="stat-lbl">XP Today</div>
+      </div>
+    </div>
+
+    <div class="xp-section">
+      <div class="xp-header">
+        <span class="xp-label" id="levelLabel">LEVEL 1 — RECRUIT</span>
+        <span class="xp-label" id="xpProgress">0 / 100 XP</span>
+      </div>
+      <div class="xp-bar-bg">
+        <div class="xp-bar" id="xpBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="affirmation">
+      <div class="affirmation-text" id="dailyAffirmation">Loading your daily mission...</div>
+    </div>
+
+    <div class="section-header">
+      <h2>Water Intake</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="water-tracker">
+      <div class="water-header">
+        <div class="water-title">HYDRATION STATUS</div>
+        <div class="water-count"><span id="waterCount">0</span>/8 glasses</div>
+      </div>
+      <div class="water-cups" id="waterCups"></div>
+      <button class="water-btn" onclick="addWater()">+ LOG GLASS OF WATER</button>
+    </div>
+
+    <div class="section-header">
+      <h2>Today's Quote</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="quote-box" id="dailyQuote">
+      Loading...
+    </div>
+  </div>
+
+  <!-- HABITS -->
+  <div class="page" id="page-habits">
+    <div class="section-header" style="margin-top:10px">
+      <h2>Daily Habits</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="habit-group">
+      <div class="habit-group-title wealth">💰 WEALTH BUILDING</div>
+      <div id="habits-wealth"></div>
+    </div>
+
+    <div class="habit-group">
+      <div class="habit-group-title mind">🧠 MIND POWER</div>
+      <div id="habits-mind"></div>
+    </div>
+
+    <div class="habit-group">
+      <div class="habit-group-title body">💪 BODY & ENERGY</div>
+      <div id="habits-body"></div>
+    </div>
+  </div>
+
+  <!-- VICES/BATTLES -->
+  <div class="page" id="page-vices">
+    <div class="section-header" style="margin-top:10px">
+      <h2>Battle Your Demons</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="quote-box">
+      Every day you resist is a day you win. Your future self is watching. The millionaire version of you has already defeated these.
+    </div>
+
+    <div id="vices-container"></div>
+
+    <div class="section-header">
+      <h2>Why You Must Win</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="reminder">
+      <div class="reminder-time">⚠️ PORN ADDICTION</div>
+      Destroys dopamine receptors, kills motivation, wrecks confidence, ruins relationships. Every time you quit, your brain rewires. 90 days = new brain.
+    </div>
+    <div class="reminder">
+      <div class="reminder-time">⚠️ MASTURBATION</div>
+      Drains energy, lowers testosterone, kills ambition. That energy is your fuel — redirect it into building wealth.
+    </div>
+    <div class="reminder">
+      <div class="reminder-time">⚠️ PHONE ADDICTION</div>
+      The average person loses 4+ hours/day. That's 1,460 hours/year you could use to build a business. Algorithms are designed to keep you poor and distracted.
+    </div>
+    <div class="reminder">
+      <div class="reminder-time">⚠️ SLEEP DEPRIVATION</div>
+      Kills IQ, decision-making, and muscle growth. Millionaires sleep 7-8 hours. Your brain consolidates memory and solves problems during sleep.
+    </div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="page" id="page-schedule">
+    <div class="section-header" style="margin-top:10px">
+      <h2>Your Millionaire Day</h2>
+      <div class="section-line"></div>
+    </div>
+    <div id="schedule-list"></div>
+  </div>
+
+  <!-- WEALTH ROADMAP -->
+  <div class="page" id="page-wealth">
+    <div class="section-header" style="margin-top:10px">
+      <h2>Your Path to KES 1M+</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="quote-box">
+      You are 18. Warren Buffett started at 11. You are not late — you are early. Every Kenyan billionaire started with an idea, not money.
+    </div>
+
+    <div id="roadmap-list"></div>
+
+    <div class="section-header">
+      <h2>Income Skills to Learn</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div id="skills-list"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="page" id="page-progress">
+    <div class="section-header" style="margin-top:10px">
+      <h2>Performance Analytics</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">WEEKLY HABIT SCORE (%)</div>
+      <div class="bar-chart" id="weeklyChart"></div>
+      <div class="bar-labels" id="weeklyLabels"></div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">CLEAN DAYS — VICE BATTLES</div>
+      <div id="viceProgress"></div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">XP EARNED THIS WEEK</div>
+      <div class="bar-chart" id="xpChart"></div>
+      <div class="bar-labels" id="xpLabels"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ DATA ============
+const HABITS = {
+  wealth: [
+    { id: 'read', name: 'Read 20 Pages', desc: 'Business, finance, or self-development book', xp: 20, color: '#FFD700' },
+    { id: 'journal', name: 'Morning Journal', desc: 'Write 3 goals + 3 gratitudes', xp: 15, color: '#FFD700' },
+    { id: 'learn_skill', name: 'Learn a Money Skill', desc: '30 min: coding, design, sales, or digital marketing', xp: 25, color: '#FFD700' },
+    { id: 'save', name: 'Save Money Today', desc: 'Set aside any amount — even KES 10', xp: 20, color: '#FFD700' },
+    { id: 'network', name: 'Connect With Someone', desc: 'Message a mentor, join a group, or learn from someone successful', xp: 15, color: '#FFD700' },
+    { id: 'idea', name: 'Write a Business Idea', desc: 'One new idea per day — most millionaires had 1000 bad ideas first', xp: 10, color: '#FFD700' },
+  ],
+  mind: [
+    { id: 'meditate', name: 'Meditate 10 Minutes', desc: 'Clears mind, builds focus, reduces anxiety', xp: 15, color: '#FF00FF' },
+    { id: 'no_social', name: 'Max 30 Min Social Media', desc: 'Instagram, TikTok, Twitter — set a timer', xp: 20, color: '#FF00FF' },
+    { id: 'visualize', name: 'Visualize Your Future', desc: '5 min — see yourself as a millionaire in Kenya. Feel it.', xp: 10, color: '#FF00FF' },
+    { id: 'no_negative', name: 'Zero Complaining', desc: 'Winners solve problems. Losers complain.', xp: 10, color: '#FF00FF' },
+    { id: 'podcast', name: 'Listen to Success Story', desc: 'Podcast or YouTube — 1 successful person per day', xp: 10, color: '#FF00FF' },
+  ],
+  body: [
+    { id: 'wake_early', name: 'Wake Before 6:30 AM', desc: 'The world belongs to early risers', xp: 25, color: '#00FF88' },
+    { id: 'exercise', name: 'Exercise 30+ Minutes', desc: 'Run, gym, push-ups — sweat is fat crying', xp: 25, color: '#00FF88' },
+    { id: 'cold_shower', name: 'Cold Shower', desc: 'Builds discipline, raises testosterone, boosts alertness', xp: 20, color: '#00FF88' },
+    { id: 'no_junk', name: 'No Junk Food', desc: 'Your body is your business vehicle — fuel it right', xp: 15, color: '#00FF88' },
+    { id: 'sleep_10', name: 'Sleep by 10:30 PM', desc: '7-8 hours is non-negotiable for peak performance', xp: 20, color: '#00FF88' },
+    { id: 'walk', name: 'Walk in Sunlight', desc: 'At least 20 min outside — vitamin D + clarity', xp: 10, color: '#00FF88' },
+  ]
+};
+
+const VICES = [
+  { id: 'porn', name: 'PORN ADDICTION', goal: 90, desc: 'Days clean from pornography' },
+  { id: 'mast', name: 'MASTURBATION', goal: 30, desc: 'Days clean — NoFap challenge' },
+  { id: 'phone', name: 'PHONE ADDICTION', goal: 21, desc: 'Days with max 2hr screen time' },
+  { id: 'sleep', name: 'SLEEP DISCIPLINE', goal: 21, desc: 'Days sleeping 7-8 hours properly' },
+  { id: 'procras', name: 'PROCRASTINATION', goal: 30, desc: 'Days doing your MITs immediately' },
+];
+
+const SCHEDULE = [
+  { time: '05:30', title: 'WAKE UP', detail: 'No snooze. Get up immediately. You are not average.', color: '#FFD700', icon: '⚡' },
+  { time: '05:35', title: 'Cold Shower (3 min)', detail: 'Wake up your nervous system. Build iron discipline.', color: '#00FFFF', icon: '🚿' },
+  { time: '05:45', title: 'Morning Journal', detail: 'Write: 3 goals today, 3 things grateful for, 1 person to contact', color: '#FF00FF', icon: '📝' },
+  { time: '06:00', title: 'Exercise / Run', detail: '30-45 minutes. Pushups, running, or gym. Non-negotiable.', color: '#00FF88', icon: '🏃' },
+  { time: '06:45', title: 'Shower + Get Ready', detail: 'Dress sharp even at home. How you dress = how you think.', color: '#00FFFF', icon: '✨' },
+  { time: '07:00', title: 'WATER + VITAMINS', detail: 'Drink 500ml water immediately. Start hydrating.', color: '#0066FF', icon: '💧' },
+  { time: '07:15', title: 'Nutritious Breakfast', detail: 'Eggs, fruit, whole grains. Avoid sugar. Fuel the brain.', color: '#FF6600', icon: '🥚' },
+  { time: '07:45', title: 'Read 20 Pages', detail: 'Business book, biography, or finance. No social media yet.', color: '#FFD700', icon: '📖' },
+  { time: '08:30', title: 'DEEP WORK BLOCK 1', detail: 'Your most important skill/project. Phone on airplane mode.', color: '#FF00FF', icon: '🎯' },
+  { time: '10:30', title: 'WATER BREAK', detail: 'Drink 300ml water. Stretch. 5-min walk.', color: '#0066FF', icon: '💧' },
+  { time: '10:35', title: 'DEEP WORK BLOCK 2', detail: 'Continue skill building: coding, design, sales, content.', color: '#FF00FF', icon: '🎯' },
+  { time: '12:30', title: 'LUNCH', detail: 'Balanced meal. Protein + vegetables + carbs. No fast food.', color: '#FF6600', icon: '🍱' },
+  { time: '13:00', title: 'WATER + REST', detail: '300ml water. 20-min power nap optional.', color: '#0066FF', icon: '💧' },
+  { time: '13:30', title: 'Networking / Outreach', detail: 'Message 3 people: mentors, clients, collaborators, or investors.', color: '#FFD700', icon: '🤝' },
+  { time: '14:00', title: 'DEEP WORK BLOCK 3', detail: 'Business planning, content creation, or side hustle work.', color: '#FF00FF', icon: '🎯' },
+  { time: '16:00', title: 'WATER + Walk Outside', detail: '300ml water. 20 min sunlight walk. Reset your brain.', color: '#0066FF', icon: '💧' },
+  { time: '16:30', title: 'Learn Something New', detail: 'YouTube tutorial, online course, or podcast on wealth.', color: '#00FF88', icon: '🧠' },
+  { time: '18:00', title: 'DINNER', detail: 'Light meal. Avoid heavy food at night. Your body needs rest to repair.', color: '#FF6600', icon: '🍽️' },
+  { time: '18:30', title: 'WATER', detail: 'Last big water intake. 300ml.', color: '#0066FF', icon: '💧' },
+  { time: '19:00', title: 'Review Your Day', detail: 'What did you accomplish? What will you improve tomorrow?', color: '#FFD700', icon: '📊' },
+  { time: '19:30', title: 'Visualize + Meditate', detail: '10 min meditation. See your millionaire life clearly.', color: '#FF00FF', icon: '🧘' },
+  { time: '20:00', title: 'Family / Rest Time', detail: 'Recharge. Connect. Watch something educational max 1hr.', color: '#00FF88', icon: '🏡' },
+  { time: '21:30', title: 'Prepare for Tomorrow', detail: 'Lay out clothes. Set goals. Plan tomorrow tonight.', color: '#FFD700', icon: '📋' },
+  { time: '22:00', title: 'LIGHTS OUT', detail: 'Phone away. Sleep. Your brain needs 7-8 hours to build a millionaire.', color: '#00FFFF', icon: '🌙' },
+];
+
+const ROADMAP = [
+  { age: 'AGE 18 — NOW', title: 'Foundation Phase', desc: 'Kill bad habits. Build discipline. Learn one marketable skill (coding, design, video editing, digital marketing). Read 2 books/month. Open a savings account.', target: 'Target: KES 5,000 saved • 1 skill learned', status: 'current', icon: '🎯' },
+  { age: 'AGE 19', title: 'First Income Stream', desc: 'Freelance using your skill on Fiverr, Upwork, or locally. Start a YouTube, TikTok, or blog. Offer services to local businesses.', target: 'Target: KES 10,000–50,000/month income', status: 'future', icon: '💰' },
+  { age: 'AGE 20', title: 'Business Launch', desc: 'Start a small business solving a Kenyan problem. Register your business (KRA PIN, business name). Reinvest 70% of income. Get your first real client.', target: 'Target: KES 100,000+ in business revenue', status: 'future', icon: '🚀' },
+  { age: 'AGE 21', title: 'Scale & Invest', desc: 'Hire your first person. Invest in NSE stocks or M-Akiba. Learn about real estate. Build systems so the business runs without you.', target: 'Target: KES 300,000+ revenue • First investment', status: 'future', icon: '📈' },
+  { age: 'AGE 23', title: 'Multiple Streams', desc: 'Minimum 3 income streams. Business + investments + passive income. Drive: used car. Apartment: rented in Nairobi.', target: 'Target: KES 1,000,000 net worth milestone', status: 'future', icon: '💎' },
+  { age: 'AGE 25', title: 'MILLIONAIRE STATUS', desc: 'KES 5M+ net worth. Business employing 5+ people. Real estate investment. Mentoring other young Kenyans.', target: 'Target: KES 5,000,000+ net worth', status: 'future', icon: '🏆' },
+];
+
+const MONEY_SKILLS = [
+  { skill: 'Freelance Writing / Copywriting', why: 'Earn KES 2,000–20,000 per article. Remote, no degree needed.' },
+  { skill: 'Graphic Design (Canva → Figma)', why: 'Charge KES 3,000–30,000 per logo. Hundreds of Kenyan businesses need this.' },
+  { skill: 'Video Editing', why: 'Every creator, company, and church needs this. KES 5,000–50,000 per project.' },
+  { skill: 'Web Development', why: 'Build websites for Kenyan SMEs. KES 20,000–200,000 per site.' },
+  { skill: 'Digital Marketing', why: 'Run Facebook/Instagram ads. KES 10,000–100,000/month retainers.' },
+  { skill: 'Content Creation (YouTube/TikTok)', why: 'Build an audience, monetize via ads + brand deals. Long-term wealth.' },
+  { skill: 'Trading (Forex/NSE)', why: 'Learn the rules first. Paper trade 6 months before real money.' },
+  { skill: 'Dropshipping / E-commerce', why: 'Sell products online via Jumia or your own store. Start with KES 2,000.' },
+];
+
+const QUOTES = [
+  { text: "Your only competition is who you were yesterday. Every rep, every page, every shilling saved — it compounds.", author: "APEX SYSTEM" },
+  { text: "The richest people in the world look for and build networks. Everyone else looks for work.", author: "Robert Kiyosaki" },
+  { text: "Formal education will make you a living; self-education will make you a fortune.", author: "Jim Rohn" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "You are 18. Your brain is at peak neuroplasticity. You can learn ANYTHING right now faster than you ever will again.", author: "APEX SYSTEM" },
+  { text: "The discipline you build at 18 is the freedom you enjoy at 28.", author: "APEX SYSTEM" },
+  { text: "Every Kenyan millionaire was once broke, confused, and doubted. The difference is they didn't quit.", author: "APEX SYSTEM" },
+  { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+  { text: "Success is not given. It is earned in the dark, when no one is watching, when quitting feels easy.", author: "APEX SYSTEM" },
+];
+
+const AFFIRMATIONS = [
+  "I AM BUILDING AN EMPIRE ONE DAY AT A TIME.",
+  "MY DISCIPLINE TODAY IS MY FREEDOM TOMORROW.",
+  "I AM KENYA'S NEXT GREAT SUCCESS STORY.",
+  "I CHOOSE GROWTH OVER COMFORT EVERY SINGLE DAY.",
+  "MY HABITS ARE PROGRAMMING MY FUTURE WEALTH.",
+  "EVERY URGE I RESIST MAKES ME UNSTOPPABLE.",
+  "I AM EXACTLY WHERE I NEED TO BE — GETTING BETTER.",
+  "THE MILLIONAIRE MINDSET ALREADY LIVES IN ME.",
+];
+
+// ============ STATE ============
+let state = JSON.parse(localStorage.getItem('apex_state') || 'null') || {
+  pin: '1234',
+  todayHabits: {},
+  vices: { porn: 0, mast: 0, phone: 0, sleep: 0, procras: 0 },
+  water: 0,
+  weeklyScores: [0, 0, 0, 0, 0, 0, 0],
+  weeklyXP: [0, 0, 0, 0, 0, 0, 0],
+  totalXP: 0,
+  streak: 0,
+  lastDate: null,
+};
+
+function save() {
+  localStorage.setItem('apex_state', JSON.stringify(state));
+}
+
+// ============ LOGIN ============
+function doLogin() {
+  const pin = document.getElementById('pinInput').value;
+  if (pin === state.pin) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('loginError').textContent = '⚠ INVALID PIN — ACCESS DENIED';
+    document.getElementById('pinInput').value = '';
+    setTimeout(() => { document.getElementById('loginError').textContent = ''; }, 3000);
+  }
+}
+
+document.getElementById('pinInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function logout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pinInput').value = '';
+}
+
+// ============ TABS ============
+function showTab(tabName) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============ INIT ============
+function initApp() {
+  checkNewDay();
+  updateDate();
+  updateGreeting();
+  renderHabits();
+  renderVices();
+  renderSchedule();
+  renderRoadmap();
+  renderSkills();
+  renderWater();
+  updateDashboard();
+  renderCharts();
+  setDailyContent();
+}
+
+function checkNewDay() {
+  const today = new Date().toDateString();
+  if (state.lastDate && state.lastDate !== today) {
+    const score = calcScore();
+    if (score >= 70) state.streak++;
+    else if (score < 30) state.streak = 0;
+    state.weeklyScores.shift(); state.weeklyScores.push(score);
+    const xp = calcXP();
+    state.weeklyXP.shift(); state.weeklyXP.push(xp);
+    state.todayHabits = {};
+    state.water = 0;
+  }
+  state.lastDate = today;
+  save();
+}
+
+function calcScore() {
+  const allHabits = [...HABITS.wealth, ...HABITS.mind, ...HABITS.body];
+  const done = allHabits.filter(h => state.todayHabits[h.id] === 'done').length;
+  return Math.round((done / allHabits.length) * 100);
+}
+
+function calcXP() {
+  const allHabits = [...HABITS.wealth, ...HABITS.mind, ...HABITS.body];
+  return allHabits.filter(h => state.todayHabits[h.id] === 'done').reduce((sum, h) => sum + h.xp, 0);
+}
+
+function updateDate() {
+  const now = new Date();
+  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('navDate').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  const greetings = {
+    morning: ['RISE AND CONQUER, WARRIOR', 'GOOD MORNING — THE EMPIRE AWAITS', 'EXECUTE TODAY\'S MISSION'],
+    afternoon: ['STAY FOCUSED, CHAMPION', 'THE GRIND CONTINUES', 'NO STOPPING NOW'],
+    evening: ['FINISH STRONG TODAY', 'REFLECT AND RECHARGE', 'ONE MORE WIN BEFORE BED'],
+  };
+  const type = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  const arr = greetings[type];
+  document.getElementById('greeting').textContent = arr[Math.floor(Math.random() * arr.length)];
+}
+
+function setDailyContent() {
+  const day = new Date().getDay();
+  document.getElementById('dailyAffirmation').textContent = AFFIRMATIONS[day % AFFIRMATIONS.length];
+  const q = QUOTES[day % QUOTES.length];
+  document.getElementById('dailyQuote').innerHTML = `"${q.text}"<div class="quote-author">— ${q.author}</div>`;
+}
+
+function updateDashboard() {
+  const score = calcScore();
+  const xp = calcXP();
+  const allHabits = [...HABITS.wealth, ...HABITS.mind, ...HABITS.body];
+  const done = allHabits.filter(h => state.todayHabits[h.id] === 'done').length;
+
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statTotal').textContent = allHabits.length;
+  document.getElementById('statXP').textContent = xp;
+  document.getElementById('streakNum').textContent = '🔥 ' + state.streak;
+
+  // Ring
+  const ring = document.getElementById('scoreRing');
+  const offset = 440 - (440 * score / 100);
+  ring.style.strokeDashoffset = offset;
+
+  // XP/Level
+  const level = Math.floor(state.totalXP / 100) + 1;
+  const levelNames = ['RECRUIT', 'HUSTLER', 'BUILDER', 'GRINDER', 'ACHIEVER', 'CHAMPION', 'MILLIONAIRE'];
+  const levelName = levelNames[Math.min(level - 1, levelNames.length - 1)];
+  document.getElementById('levelLabel').textContent = `LEVEL ${level} — ${levelName}`;
+  const prog = (state.totalXP % 100);
+  document.getElementById('xpProgress').textContent = `${prog} / 100 XP`;
+  document.getElementById('xpBar').style.width = prog + '%';
+}
+
+// ============ HABITS ============
+function renderHabits() {
+  ['wealth', 'mind', 'body'].forEach(group => {
+    const container = document.getElementById('habits-' + group);
+    container.innerHTML = '';
+    HABITS[group].forEach(habit => {
+      const status = state.todayHabits[habit.id] || '';
+      const card = document.createElement('div');
+      card.className = 'habit-card' + (status === 'done' ? ' done' : status === 'failed' ? ' failed' : '');
+      card.style.setProperty('--habit-color', habit.color);
+      card.innerHTML = `
+        <div class="habit-check">${status === 'done' ? '✓' : status === 'failed' ? '✗' : ''}</div>
+        <div class="habit-info">
+          <div class="habit-name">${habit.name}</div>
+          <div class="habit-desc">${habit.desc}</div>
+        </div>
+        <div class="habit-xp">+${habit.xp} XP</div>
+      `;
+      card.onclick = () => toggleHabit(habit.id);
+      container.appendChild(card);
+    });
+  });
+}
+
+function toggleHabit(id) {
+  const current = state.todayHabits[id] || '';
+  if (current === '') { state.todayHabits[id] = 'done'; showToast('✓ HABIT COMPLETE — XP EARNED!'); }
+  else if (current === 'done') { state.todayHabits[id] = 'failed'; showToast('Marked as failed — try again tomorrow'); }
+  else { delete state.todayHabits[id]; }
+  state.totalXP = Math.max(0, (state.totalXP || 0) + (state.todayHabits[id] === 'done' ? 0 : 0));
+  state.totalXP = calcTotalXP();
+  save();
+  renderHabits();
+  updateDashboard();
+}
+
+function calcTotalXP() {
+  const allH = [...HABITS.wealth, ...HABITS.mind, ...HABITS.body];
+  return state.weeklyXP.reduce((a,b)=>a+b,0) + calcXP();
+}
+
+// ============ VICES ============
+function renderVices() {
+  const container = document.getElementById('vices-container');
+  container.innerHTML = '';
+  VICES.forEach(vice => {
+    const days = state.vices[vice.id] || 0;
+    const pct = Math.min(100, (days / vice.goal) * 100);
+    const div = document.createElement('div');
+    div.className = 'vice-card';
+    div.innerHTML = `
+      <div class="vice-header">
+        <div class="vice-name">${vice.name}</div>
+        <div class="vice-days">${days} / ${vice.goal} DAYS</div>
+      </div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:8px">${vice.desc}</div>
+      <div class="vice-bar-bg"><div class="vice-bar" style="width:${pct}%"></div></div>
+      <div style="font-size:0.65rem;color:rgba(0,255,136,0.6);margin-bottom:4px">${Math.round(pct)}% of goal achieved</div>
+      <div class="vice-btns">
+        <button class="vice-btn clean" onclick="viceClean('${vice.id}')">✓ STAYED CLEAN TODAY</button>
+        <button class="vice-btn relapse" onclick="viceRelapse('${vice.id}')">⚠ RELAPSED</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  renderViceProgress();
+}
+
+function viceClean(id) {
+  state.vices[id] = (state.vices[id] || 0) + 1;
+  save();
+  renderVices();
+  showToast('💪 STAY STRONG — YOU WIN TODAY!');
+}
+
+function viceRelapse(id) {
+  state.vices[id] = 0;
+  save();
+  renderVices();
+  showToast('GET BACK UP. TOMORROW YOU RESTART. IT\'S NOT OVER.');
+}
+
+function renderViceProgress() {
+  const container = document.getElementById('viceProgress');
+  if (!container) return;
+  container.innerHTML = '';
+  VICES.forEach(vice => {
+    const days = state.vices[vice.id] || 0;
+    const pct = Math.min(100, (days / vice.goal) * 100);
+    container.innerHTML += `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:0.7rem;color:rgba(255,255,255,0.6);letter-spacing:1px">${vice.name}</span>
+          <span style="font-family:'Share Tech Mono';font-size:0.7rem;color:var(--green)">${days} days</span>
+        </div>
+        <div class="vice-bar-bg"><div class="vice-bar" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  });
+}
+
+// ============ WATER ============
+function renderWater() {
+  const container = document.getElementById('waterCups');
+  container.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const cup = document.createElement('div');
+    cup.className = 'cup' + (i < state.water ? ' filled' : '');
+    cup.textContent = '💧';
+    cup.onclick = () => { state.water = i + 1; save(); renderWater(); updateWaterCount(); };
+    container.appendChild(cup);
+  }
+  updateWaterCount();
+}
+
+function addWater() {
+  if (state.water < 8) { state.water++; save(); renderWater(); showToast('💧 HYDRATION LOGGED — KEEP GOING!'); }
+  else showToast('✓ DAILY HYDRATION COMPLETE!');
+}
+
+function updateWaterCount() {
+  document.getElementById('waterCount').textContent = state.water;
+}
+
+// ============ SCHEDULE ============
+function renderSchedule() {
+  const container = document.getElementById('schedule-list');
+  container.innerHTML = '';
+  SCHEDULE.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'schedule-item';
+    div.innerHTML = `
+      <div class="schedule-time">${item.time}</div>
+      <div class="schedule-dot" style="background:${item.color};color:${item.color}"></div>
+      <div class="schedule-content">
+        <div class="schedule-title">${item.icon} ${item.title}</div>
+        <div class="schedule-detail">${item.detail}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ============ ROADMAP ============
+function renderRoadmap() {
+  const container = document.getElementById('roadmap-list');
+  container.innerHTML = '';
+  ROADMAP.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'roadmap-item';
+    div.innerHTML = `
+      <div class="roadmap-dot ${item.status}">${item.icon}</div>
+      <div class="roadmap-content">
+        <div class="roadmap-age">${item.age}</div>
+        <div class="roadmap-title">${item.title}</div>
+        <div class="roadmap-desc">${item.desc}</div>
+        <div class="roadmap-target">${item.target}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderSkills() {
+  const container = document.getElementById('skills-list');
+  container.innerHTML = '';
+  MONEY_SKILLS.forEach((s, i) => {
+    container.innerHTML += `
+      <div class="habit-card" style="--habit-color:#FFD700;margin-bottom:8px">
+        <div style="font-family:'Orbitron',monospace;font-size:0.7rem;color:var(--gold);min-width:22px">${i + 1}</div>
+        <div class="habit-info">
+          <div class="habit-name">${s.skill}</div>
+          <div class="habit-desc">${s.why}</div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ============ CHARTS ============
+function renderCharts() {
+  const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  const today = (new Date().getDay() + 6) % 7;
+
+  // Score chart
+  const wChart = document.getElementById('weeklyChart');
+  const wLabels = document.getElementById('weeklyLabels');
+  wChart.innerHTML = '';
+  wLabels.innerHTML = '';
+  const scores = [...state.weeklyScores];
+  scores[today] = calcScore();
+  const maxS = Math.max(...scores, 10);
+  scores.forEach((s, i) => {
+    const h = Math.max(3, (s / maxS) * 80);
+    wChart.innerHTML += `<div class="bar-wrap"><div class="bar" style="height:${h}px;${i === today ? 'background:linear-gradient(180deg,var(--gold),rgba(255,215,0,0.3));box-shadow:0 0 8px rgba(255,215,0,0.4)' : ''}"></div></div>`;
+    wLabels.innerHTML += `<div class="bar-label" style="${i === today ? 'color:var(--gold)' : ''}">${days[i]}<br>${s}%</div>`;
+  });
+
+  // XP chart
+  const xChart = document.getElementById('xpChart');
+  const xLabels = document.getElementById('xpLabels');
+  xChart.innerHTML = '';
+  xLabels.innerHTML = '';
+  const xps = [...state.weeklyXP];
+  xps[today] = calcXP();
+  const maxX = Math.max(...xps, 10);
+  xps.forEach((x, i) => {
+    const h = Math.max(3, (x / maxX) * 80);
+    xChart.innerHTML += `<div class="bar-wrap"><div class="bar" style="height:${h}px;background:linear-gradient(180deg,var(--magenta),rgba(255,0,255,0.3));box-shadow:0 0 8px rgba(255,0,255,0.3);${i === today ? 'box-shadow:0 0 12px rgba(255,0,255,0.5)' : ''}"></div></div>`;
+    xLabels.innerHTML += `<div class="bar-label">${days[i]}<br>${x}</div>`;
+  });
+
+  renderViceProgress();
+}
+</script>
+</body>
+</html>
